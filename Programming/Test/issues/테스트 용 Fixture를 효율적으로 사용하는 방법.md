@@ -63,3 +63,8 @@ public static Member member = MemberFixture.DEFAULT.get();    // 머 이런식�
 
 Fixture에 고정된 값(static)으로 있기 때문에 여러 곳에서 Fixture를 사용해도 그 안의 member는 변하지 않는다.
 그런데, 데이터베이스를 사용할 때 이 부분 때문에 정합성이 깨졌다.
+
+## 읽어보기
+
+[테스트 픽스처(Test Fixture)를 어떻게 만드는 것이 좋은 걸까?](https://velog.io/@langoustine/Test-Fixture)
+[이 경우, @BeforeEach에 fixture를 구성해도 될까요?](https://www.inflearn.com/questions/947467/%EC%9D%B4-%EA%B2%BD%EC%9A%B0-beforeeach%EC%97%90-fixture%EB%A5%BC-%EA%B5%AC%EC%84%B1%ED%95%B4%EB%8F%84-%EB%90%A0%EA%B9%8C%EC%9A%94)
