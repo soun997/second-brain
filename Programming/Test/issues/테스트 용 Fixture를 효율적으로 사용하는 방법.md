@@ -57,14 +57,9 @@ CascadeType이 `PERSIST`이니 영속 이외의 다른 연산은 전파되지 �
 연관관계가 있는 엔티티 Fixture를 만들 때 귀찮아서 연관관계 컬럼 엔티티를 Fixture로 생성하여 고정해두었다.
 
 ```java
+// MealLog.java
 public static Member member = MemberFixture.DEFAULT.get();    // 머 이런식으루...
 ```
 
 Fixture에 고정된 값(static)으로 있기 때문에 여러 곳에서 Fixture를 사용해도 그 안의 member는 변하지 않는다.
 그런데, 데이터베이스를 사용할 때 이 부분 때문에 정합성이 깨졌다.
-
-한 repository 테스트에 두 개의 테스트 메서드가 있는데,
-`@BeforeEach`를 사용하여 테스트 마다 고정된 값을 가지는 `member`를 영속시켰다.
-그런데 `member`를 DB에 `save()`하면 (왜 쓰다 말았지...)
-
-**static 필드를 영속화하는 부분에서 문제가 생긴 것 같다??**
