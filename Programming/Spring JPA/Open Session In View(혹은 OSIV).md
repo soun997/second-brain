@@ -63,8 +63,7 @@ OSIV를 사용하지 않을 경우, 트랜잭션이 commit되면 `EntityManager`
 #### OSIV를 true로 한다?
 
 **장점**
-- 영속성 컨텍스트를 유지하기 때문에 
-- Lazy Loading을 사용할 수 있다.
+- 영속성 컨텍스트를 유지하기 때문에 Lazy Loading을 사용할 수 있다.
 
 **단점**
 - 실시간 트래픽이 중요한 어플리케이션에서는 DB Connection이 모자를 수 있다.
