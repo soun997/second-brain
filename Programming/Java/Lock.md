@@ -1,4 +1,4 @@
-## `ReetrantLock`
+## `ReentrantLock`
 
 재진입이 가능한 가장 일반적인 형태의 **배타락**이다.
 - **재진입**이 가능하다는 말은, **이미 락을 획득한 쓰레드가 자신이 보유한 락과 동일한 락을 다시 요청할 수 있다는 것을 의미**한다. ➡️ 락의 획득이 호출 단위가 아닌 스레드 단위로 일어난다.
@@ -8,6 +8,22 @@
 임계 영역의 공유자원을 읽거나 쓰기 위해서는 lock을 반드시 보유하고 있어야 한다.
 
 Ref: [<CS 지식> Java 고유락 (Intrinsic Lock)](https://velog.io/@kimmy/CS-%EC%A7%80%EC%8B%9D-Java-%EA%B3%A0%EC%9C%A0%EB%9D%BD-Intrinsic-Lock)
+
+### synchronized vs ReentrantLock
+
+- Lock polling(spin lock)을 지원한다.
+- 코드가 단일 블록 형태를 넘어서는 경우 사용 가능 하다.
+- 타임 아웃을 지정할 수 있다.
+- Condition을 적용해서 대기 중인 쓰레드를 선별적으로 깨울 수 있다.
+- lock 획득을 위해 waiting pool에 있는 쓰레드에게 인터럽트를 걸 수 있다.
+
+### fair 옵션
+
+가장 오래 기다린 쓰레드가 lock을 얻을 수 있도록 처리한다.
+물론, 쓰레드가 얼마나 오래 기다렸는지 확인하는 오버헤드가 발생하게 됩니다.
+
+
+
 
 
 ## `ReetrantReadWriteLock`
