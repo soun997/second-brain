@@ -10,7 +10,6 @@ Jenkins에서 Github Actions로의 마이그레이션 과정 중 했던 삽질�
 아무것도 설정하지 않은 초기 상태에서 repo의 `Actions` 탭에 들어가면 다음과 같은 화면을 볼 수 있다.
 
 처음에는 아무것도 모르고 `Publish Java Package with Gradle`을 눌렀었는데, **`Java with Gradle`을 선택해주어야 한다!**
-- 둘의 차이는 차차 알아가는 중이다^^
 
 ![[Pasted image 20240310053822.png]]
 
@@ -93,8 +92,8 @@ CI까지는 성공!
 - 라이브러리: https://github.com/appleboy/ssh-action
 
 그러나 나는 Third-Party 라이브러리를 사용하는데에 있어 주의가 필요하다고 생각한다.
-- 만약 라이브러리가 없어진다면?, 라이브러리에 의존하는 코드는 지양할 필요가 있다.
-- 특히, SSH 연결은 bash 스크립트로도 충분히 가능할 정도이기 때문에 더더욱 사용할 필요성을 느끼지 못했다.
+- 만약 라이브러리가 없어진다면?, 라이브러리에 의존하는 코드는 반드시 필요한 것이 아니라면 지양할 필요가 있다.
+- 특히, **SSH 연결은 bash 스크립트로도 충분히 가능**할 정도이기 때문에 더더욱 사용할 필요성을 느끼지 못했다.
 
 또한, `appleboy/ssh-action` 같은 경우에는 `scripts`에 실행할 커맨드들을 모두 작성해야 한다는 점이 불편하게 느껴졌다.
 +) Docker를 사용하기 때문에 bash 스크립트보다 느릴 수밖에 없다!
@@ -183,7 +182,72 @@ ssh [호스트설정이름] 'docker compose -f veganlife-dev/docker-compose.yml 
 이제 Jenkins에게 작별인사할 시간이다.
 
 
-## 추가적으로 할 것들
+## 서버 Health Check
 
-1. Build 성공, 실패 시 Discord에 알람이 가도록 설정
-2. Deploy 성공, 실패 시 Discord에 알람이 가도록 설정
+배포에 성공했다고 해도 안심할 수 없다.
+Server에 요청을 보냈을 때, 제대로 된 응답이 와야 한다!!
+
+배포에 성공했다면 Health Check를 진행하고자 한다.
+
+```yaml
+- name: Health Check  
+  run: |  
+    attempt_count=10  
+    for ((i=1; i<=$attempt_count; i++)); do  
+        response=$(curl -IsS --max-time 5 "$DEV_HEALTHCHECK_URL" | head -n 1 | cut -d$' ' -f2)  
+        if [ "$response" == "200" ]; then  
+            echo "헬스 체크 성공 - HTTP 상태코드: $response"  
+            exit 0  
+        else  
+            echo "헬스 체크 실패 - HTTP 상태코드: $response"  
+        fi  
+        sleep 3  
+    done  
+  
+    echo "헬스 체크 $attempt_count회 시도 중 실패"  
+    exit 1  
+  env:  
+    DEV_HEALTHCHECK_URL: ${{ secrets.DEV_HEALTHCHECK_URL }}
+```
+(GPT의 도움을 받았다.)
+
+10번 서버로 요청을 보내, **한 번이라도 성공**하면 반복문을 빠져나온다.
+막 서버가 올라갔을 때에는 요청을 처리할 수 없을 수도 있으니, 각 요청마다 **3초의 딜레이 시간**을 주어 서버가 구동을 시작할 때까지 기다려준다.
+
+
+## Discord 알림 전송
+
+배포에 성공했을 때와 실패했을 때, 바로 알 수 있도록 Discord와 연동하고자 한다.
+
+```yaml
+- name: Send Notification to Discord - Failure  
+  if: failure()  # 배포 성공 시에만 실행  
+  run: |  
+    curl -X POST -H 'Content-Type: application/json' -d '{"content": "Build 과정에서 문제가 발생했습니다.🥺"}' $DISCORD_WEBHOOK_URL  
+  env:  
+    DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+```
+
+주목할 곳은 `if` 부분이다.
+`success()`, `failure()`, `always()`가 있는데,
+각각 이전 작업이 성공했을 때, 실패했을 때, 성패유무 상관 없이 해당 작업을 실행한다.
+
+![[Pasted image 20240310211425.png]]
+
+배포에 성공하였을 경우 팀 Discord로 알림이 잘 전송되었다!
+(조금 밋밋하긴 한데, 차차 필요한 정보들을 담아보려고 한다)
+
+
+## 성과
+
+Jenkins 대신 Github Actions를 사용하면서 서버 메모리를 많이 아낄 수 있었다.
+그 결과 기존의 t3.medium 인스턴스에서 t3.micro 다운그레이드 할 수 있었고, **약 4배의 비용을 절약**할 수 있었다!
+- 현재 실사용자를 받기 전이기 때문에 t3.micro로도 충분할 것이라고 판단하였다.
+
+또한, Jenkins를 사용했을 때에 비해, **소요시간이 약 80% 감소**하였다. (289s ➡️ 157s)
+
+배포 주기가 더 짧아졌기 때문에 팀원들의 생산성 향상을 기대할 수 있을 것 같다.
+
+### 추가적으로...
+
+Code Deploy 또한 EC2 인스턴스로의 배포에는 추가 비용이 부과되지 않기 때문에 한 번 공부해서 해당 기술도 사용해보고 싶다!
