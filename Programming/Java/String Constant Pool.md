@@ -3,6 +3,7 @@
 Java에서 문자열 리터럴을 저장하는 독립된 영역이다.
 - `String`은 **불변객체**이기 때문에 문자열의 생성 시, String Constant Pool에 저장된 리터럴을 재사용할 수 있다.
 - String Constant Pool에 저장된 문자열은 **모두 같은 객체를 사용**하게 된다.
+- 이는 디자인 패턴에 **Flyweight Pattern(플라이웨이트 패턴)**을 참고하면 이해가 더 쉬울 것이다.
 
 String Constant Pool은 일반적으로 GC의 대상이 되지 않지만, 문자열 참조 대상이 없는 경우에는 선택적으로 GC 대상이 되기도 한다.
 
