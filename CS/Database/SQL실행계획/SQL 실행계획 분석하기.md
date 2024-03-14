@@ -119,6 +119,7 @@ group by ml.meal_type;
 
 인덱스를 사용하지 않았을 경우, **평균적으로 40ms가 소요**되었다.
 
+## 
 ## Ref
 
 [MySQL 실행 계획과 결과 컬럼 설명 (MySQL EXPLAIN Output Format)](https://kukim.tistory.com/128)
