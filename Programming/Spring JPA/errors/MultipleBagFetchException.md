@@ -29,7 +29,7 @@
 - **BatchSize 옵션을 이용하여 컬렉션들을 지연로딩한다.**
 
 나는 위의 해결 방법 중 김영한 강사님께서 언급하시기도 한 BatchSize 옵션을 이용하여 해결해보려고 한다.
-[[또 LazyInitializationException...]]
+[[LazyInitializationException과 N+1 문제 해결]]
 
 ## Ref
 

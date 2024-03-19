@@ -4,11 +4,11 @@ sticker: emoji//2705
 ## 문제 상황
 
 Service 레이어에서 엔티티를 반환하고 Controller에서 이를 Response DTO로 매핑해주었다.
-그러나 매핑하는 과정에서 join 하는 엔티티의 프록시 객체에 접근할 때 LazyInitializationException이 발생했다.
+그러나 매핑하는 과정에서 자식 엔티티의 프록시 객체에 접근할 때 LazyInitializationException이 발생했다.
 
 ## 발생 이유
 
-OSIV 설정을 false로 해두었기 때문에 영속성 컨텍스트의 생존 범위가 트랜잭션 범위로 한정되게 된다.
+OSIV 설정을 false로 해두었기 때문에 영속성 컨텍스트의 생존 범위가 트랜잭션 범위로 한정되었다.
 그러므로 모든 지연 로딩을 트랜잭션 안에서 처리해야 한다.
 
 ## 해결 방법
@@ -27,7 +27,7 @@ OSIV 설정을 false로 해두었기 때문에 영속성 컨텍스트의 생존 
 
 N+1 문제를 어떻게 해결할 수 있을까?
 
-### batch_fetch_size 를 이용한 해결
+### default_batch_fetch_size 를 이용한 해결
 
 ```yaml
 spring:  
@@ -40,8 +40,10 @@ spring:
 
 다음과 같이 `application.yml` 파일에 설정해준다.
 
-batch_fetch_size를 설정해두면 조회 결과가 N개일 때 각각 쿼리를 날리는 것이 아니라, **batch size**만큼 한꺼번에 날리게 된다.
+batch_fetch_size를 설정해두면 조회 결과가 N개일 때 각각 쿼리를 날리는 것이 아니라, **default_batch_fetch_size**만큼 한꺼번에 날리게 된다.
 - N+1 문제를 해결할 수 있다.
+
+
 
 [Vegan Life 프로젝트 내에서의 성능 개선](https://github.com/Vegan-Life/VeganLife-Backend/pull/197)
 
