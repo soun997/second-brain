@@ -28,7 +28,7 @@
 **Github**: https://github.com/soun997/ZupZup
 
 #### 🔧프로젝트 개선
-- [[동시성 문제]]
+- [[동시성 문제 해결]]
 
 #### 🤔고민했던 것
 - [[RedisTemplate을 의존하는 Service 테스트하기]]
