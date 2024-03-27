@@ -1,6 +1,6 @@
 ## 😢문제 상황
 
-플로깅 기록 서비스인 '줍줍'에서는 사용자의 이동 경로를 30초 마다 수집하고, 플로깅 종료시 이를 한꺼번에 서버에 전송한다.
+플로깅 기록 서비스인 '줍줍'에서는 사용자의 이동 경로(`Route`)를 30초 마다 수집하고, 플로깅 종료시 이를 한꺼번에 서버에 전송한다.
 사용자가 약 1시간 동안 플로깅을 하면 120개의 위치 정보 데이터가 수집된다.
 
 ### 무엇이 문제인가?
@@ -53,6 +53,20 @@ where
 ### JdbcTemplate 적용
 
 ```java
+public void saveBatch(Route route) {  
+    KeyHolder keyHolder = new GeneratedKeyHolder();  
+    jdbcTemplate.update(new PreparedStatementCreator() {  
+        @Override  
+        public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {  
+            PreparedStatement pstmt = conn.prepareStatement(  
+                    "INSERT INTO ROUTE(`plogging_log_id`) VALUE (?)", new String[] {"id"});  
+            pstmt.setLong(1, route.getPloggingLog().getId());  
+            return pstmt;  
+        }  
+    }, keyHolder);  
+    batchInsert(Objects.requireNonNull(keyHolder.getKey()).longValue(), route.getLocations());  
+}
+
 private void batchInsert(Long routeId, List<Location> locations) {  
     jdbcTemplate.batchUpdate(  
             "INSERT INTO LOCATION (`latitude`, `longitude`, `route_id`) VALUES (?, ?, ?)",  
@@ -93,3 +107,5 @@ private void batchInsert(Long routeId, List<Location> locations) {
 https://dkswnkk.tistory.com/682
 https://datamoney.tistory.com/319
 https://jojoldu.tistory.com/558
+https://cheese10yun.github.io/jpa-batch-insert/
+https://homoefficio.github.io/2020/01/25/Spring-Data%EC%97%90%EC%84%9C-Batch-Insert-%EC%B5%9C%EC%A0%81%ED%99%94/

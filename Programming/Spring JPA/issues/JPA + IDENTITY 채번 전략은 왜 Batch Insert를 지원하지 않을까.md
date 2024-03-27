@@ -16,6 +16,7 @@ SQL 쿼리를 버퍼에 모아놨다가 `flush()`하는 시점에 데이터베�
 
 ```java
 @Entity
+@NoArgsConstructor
 public class Parent {  
   
     @Id  
@@ -29,9 +30,12 @@ public class Parent {
             fetch = FetchType.LAZY,  
             cascade = CascadeType.ALL)  
     private List<Child> children;  
+
+	// ...
 }
 
 @Entity
+@NoArgsConstructor
 public class Child {  
   
     @Id  
@@ -43,6 +47,8 @@ public class Child {
     @ManyToOne(fetch = FetchType.LAZY)  
     @JoinColumn(name = "parent_id")  
     private Parent parent;
+
+	// ...
 }
 ```
 
@@ -74,6 +80,116 @@ VALUES
 
 ## `SEQUENCE`와의 비교
 
+엔티티의 채번 전략을 `SEQUENCE`로 수정한다.
+
+```java
+@Entity  
+@NoArgsConstructor  
+@SequenceGenerator(  
+        name = "PARENT_SEQ_GENERATOR",  
+        sequenceName = "PARENT_SEQ",  
+        initialValue = 1, allocationSize = 1  
+)  
+public class Parent {  
+  
+    @Id  
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "PARENT_SEQ_GENERATOR")  
+    private Long id;  
+    private String name;  
+  
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)  
+    private List<Child> children = new ArrayList<>();  
+}
+
+@Entity  
+@NoArgsConstructor  
+@SequenceGenerator(  
+        name = "CHILD_SEQ_GENERATOR",  
+        sequenceName = "CHILD_SEQ",  
+        initialValue = 1, allocationSize = 1  
+)  
+public class Child {  
+  
+    @Id  
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "CHILD_SEQ_GENERATOR")  
+    private Long id;  
+  
+    private String name;  
+  
+    @ManyToOne(fetch = FetchType.LAZY)  
+    @JoinColumn(name = "parent_id")  
+    private Parent parent;  
+}
+```
+
+### Batch Insert 실행 전 채번
+
+애플리케이션을 실행하면 다음과 같이 `SEQUENCE` 객체가 생성되었다는 로그를 출력한다.
+
+```sql
+Hibernate: 
+    create sequence child_seq start with 1 increment by 1
+Hibernate: 
+    create sequence parent_seq start with 1 increment by 1
+```
+
+Batch Insert 이전에 먼저 채번한다.
+
+```sql
+Hibernate: 
+    select
+        next value for parent_seq
+Hibernate: 
+    select
+        next value for child_seq
+Hibernate: 
+    select
+        next value for child_seq
+Hibernate: 
+    select
+        next value for child_seq
+Hibernate: 
+    select
+        next value for child_seq
+Hibernate: 
+    select
+        next value for child_seq
+
+```
+
+#### Batch 채번을 통한 최적화
+
+현재 `@SeqenceGenerator`의 `allocationSize`를 1로 설정했기 때문에 **삽입하려는 엔티티의 개수만큼 채번 쿼리가 발생**했다.
+
+`allocationSize`를 더 크게 조정하여, 이들을 한 번에 가져올 수 있다. (default는 50이다)
+
+```java
+@Entity  
+@NoArgsConstructor  
+@SequenceGenerator(  
+        name = "PARENT_SEQ_GENERATOR",  
+        sequenceName = "PARENT_SEQ",  
+        initialValue = 1, allocationSize = 50  
+)  
+public class Parent {
+```
+
+### Batch Insert 쿼리
+
+```sql
+INSERT INTO parent(id, name)
+VALUES 
+	(1, "부모1")
+  
+INSERT INTO child(name, parent_id)
+VALUES
+	("자식1", 1),
+	("자식2", 1),
+	("자식3", 1),
+	("자식4", 1),
+	("자식5", 1);
+```
+
 
 
 
@@ -82,3 +198,5 @@ VALUES
 [Batch inserts](https://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#batch-session-batch-insert)
 [JPA의 쓰기지연 기능 확인해보기 (transactional write-behind)](https://soongjamm.tistory.com/150)
 https://thorben-janssen.com/jpa-generate-primary-keys/#GenerationTypeIDENTITY
+https://lordofkangs.tistory.com/358
+https://homoefficio.github.io/2020/01/25/Spring-Data%EC%97%90%EC%84%9C-Batch-Insert-%EC%B5%9C%EC%A0%81%ED%99%94/
